@@ -1,0 +1,38 @@
+FROM centos:7
+
+# Install Apache
+RUN yum -y update
+RUN yum -y install httpd httpd-tools mod_ssl
+
+# Install EPEL Repo
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+ && rpm -Uvh http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+
+# Install PHP
+RUN yum --enablerepo=remi-php74 -y install php php-bcmath php-cli php-common php-curl php-pdo php-json php-mcrypt php-gd php-ldap php-mbstring \
+    php-mysqlnd php-pear php-soap php-xml php-xmlrpc php-zip
+
+# Do Apache/PHP Configuration
+RUN cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.origin
+RUN cp /etc/php.ini /etc/php.ini.origin
+
+RUN sed -E -i -e 's/DirectoryIndex (.*)$/DirectoryIndex index.php \1/g' /etc/httpd/conf/httpd.conf
+RUN echo -e "\n\
+TraceEnable Off\n\
+ServerSignature Off\n\
+ServerTokens Prod\n\n\
+# load vhost config \n\
+IncludeOptional vhost.d/*.conf\n" >> /etc/httpd/conf/httpd.conf
+
+RUN sed -E -i -e 's/expose_php = On/expose_php = Off/' /etc/php.ini
+
+# RUN COPY vhost.d/* /etc/httpd/ -- this be a directory volumn map instead
+
+EXPOSE 80
+EXPOSE 443
+
+RUN systemctl enable httpd
+
+# Start Apache
+# ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["/usr/sbin/httpd","-D","FOREGROUND"]
