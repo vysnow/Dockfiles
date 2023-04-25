@@ -1,0 +1,37 @@
+version: "3"
+
+networks:
+  kalinet:
+    ipam:
+      driver: default
+      config:
+        - subnet: '177.17.0.0/16'
+
+services:
+  kali1:
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-kali
+    container_name: kali1
+    tty: true
+    volumes:
+      - /Users/john/python_container:/data
+    networks:
+      - kalinet
+  kali2:
+    container_name: kali2
+    image: my-kali
+    tty: true
+    volumes:
+      - /Users/john/python_container:/data
+    networks:
+      - kalinet
+  kali3:
+    container_name: kali3
+    image: my-kali
+    tty: true
+    volumes:
+      - /Users/john/python_container:/data
+    networks:
+      - kalinet
